@@ -8,9 +8,12 @@ type ComparisonItem = {
   menu_html: string;
   caption_html: string;
   price_html: string;
+  menuid_html: string;
   diff_menu: number;
   diff_caption: number;
   diff_price: number;
+  diff_menuid: number;
+  is_same_set: boolean;
 };
 
 type ComparisonResultType = ComparisonItem[];
