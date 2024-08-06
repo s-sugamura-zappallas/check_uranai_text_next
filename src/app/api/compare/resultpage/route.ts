@@ -25,7 +25,7 @@ const extractionStrategies: Record<string, ExtractionStrategy> = {
   zap: {
     sectionSelector: '.section_bdy, .article_bdy',
     titleSelector: 'h1, h2, h3, h4, h5, h6',
-    textSelector: '.detail_txt p',
+    textSelector: '.detail_txt p:first-child',
     clientSelector: '.basic_info p',
     partnerSelector: '.info_other p',
     titleProcessor: (element: cheerio.Cheerio<cheerio.Element>) => {
@@ -144,7 +144,7 @@ const analyzeRelevance = async (title: string, content: string, clientName: stri
 
   const systemPrompt = `<instruction>
 あなたのタスクはtitleとcontentの関連度が高いか確認することです
-関連度はtitleの内容がcontentにちゃんと記載されていれば高くなります。
+関連度はtitleの内���がcontentにちゃんと記載されていれば高くなります。
 ユーザーに出す本番用の文章なので少しでも違和感を感じたら忌憚なく厳しく判断してください
 </instruction>
 
