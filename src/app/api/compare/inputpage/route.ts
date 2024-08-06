@@ -7,34 +7,159 @@ interface SubTitle {
   subTitle: string;
 }
 
-function inputHtmlToDfRsa(htmlStr: string): SubTitle[] {
-  const $ = cheerio.load(htmlStr);
-  const subTitles: SubTitle[] = [];
-  
-  $('section#subMenuTitleLists div.submenu_title > p').each((index, element) => {
-    subTitles.push({
-      index: index + 1,
-      subTitle: $(element).text().trim()
-    });
-  });
-
-  return subTitles;
+interface PageData {
+  nav_text: string;
+  breadcrumb: string;
+  main_title: string;
 }
 
-function resultHtmlToDfRsa(htmlStr: string): SubTitle[] {
-  const $ = cheerio.load(htmlStr);
-  const subTitles: SubTitle[] = [];
-  
-  $('div[class^="result_subheading"]').each((index, element) => {
-    const pText = $(element).find('p').text().trim();
-    subTitles.push({
-      index: index + 1,
-      subTitle: pText
-    });
-  });
-
-  return subTitles;
+interface CompanyConfig {
+  inputExtractor: (htmlStr: string) => SubTitle[];
+  resultExtractor: (htmlStr: string) => SubTitle[];
+  inputPageDataExtractor: (htmlStr: string) => PageData;
+  resultPageDataExtractor: (htmlStr: string) => PageData;
 }
+
+const companyConfigs: Record<string, CompanyConfig> = {
+  rsa: {
+    inputExtractor: (htmlStr) => {
+      const $ = cheerio.load(htmlStr);
+      return $('section#subMenuTitleLists div.submenu_title > p').map((index, element) => ({
+        index: index + 1,
+        subTitle: $(element).text().trim()
+      })).get();
+    },
+    resultExtractor: (htmlStr) => {
+      const $ = cheerio.load(htmlStr);
+      return $('div[class^="result_subheading"]').map((index, element) => ({
+        index: index + 1,
+        subTitle: $(element).find('p').text().trim()
+      })).get();
+    },
+    inputPageDataExtractor: (htmlStr) => {
+      const $ = cheerio.load(htmlStr);
+      return {
+        nav_text: $('.contents_headerCopy').text().trim(),
+        breadcrumb: $('#topicpath p')
+          .contents()
+          .filter(function() {
+            return this.nodeType === 3 && $(this).prev().is('a');
+          })
+          .last()
+          .text()
+          .trim()
+          .replace(/^>\s*/, ''),
+        main_title: $('div[class*="content-menu-title-background-center"], div[class*="content_menu_title_background_center"]').find('p').text().trim(),
+      };
+    },
+    resultPageDataExtractor: (htmlStr) => {
+      const $ = cheerio.load(htmlStr);
+      return {
+        nav_text: $('.contents_headerCopy').text().trim(),
+        breadcrumb: $('#topicpath a').last().text().trim(),
+        main_title: $('div[class*="content-menu-title-background-center"], div[class*="content_menu_title_background_center"]').find('p').text().trim(),
+      };
+    },
+  },
+  zap: {
+    inputExtractor: (htmlStr) => {
+      const $ = cheerio.load(htmlStr);
+      return $('div.section_hdr h3').map((index, element) => ({
+        index: index + 1,
+        subTitle: $(element).text().trim()
+      })).get();
+    },
+    resultExtractor: (htmlStr) => {
+      const $ = cheerio.load(htmlStr);
+      return $('.section_bdy h1, .section_bdy h2, .section_bdy h3, .section_bdy h4, .section_bdy h5, .section_bdy h6, .article_bdy h1, .article_bdy h2, .article_bdy h3, .article_bdy h4, .article_bdy h5, .article_bdy h6').map((index, element) => ({
+        index: index + 1,
+        subTitle: $(element).text().trim()
+      })).get();
+    },
+    inputPageDataExtractor: (htmlStr) => {
+      const $ = cheerio.load(htmlStr);
+      return {
+        nav_text: $('.contents_headerCopy').text().trim(),
+        breadcrumb: 'プログラムで制御',
+        main_title: $('div.menu_title h2').text().trim(),
+      };
+    },
+    resultPageDataExtractor: (htmlStr) => {
+      const $ = cheerio.load(htmlStr);
+      return {
+        nav_text: $('.contents_headerCopy').text().trim(),
+        breadcrumb: $('div#topicpath a').last().text().trim(),
+        main_title: $('div.menu_title h2').text().trim(),
+      };
+    },
+  },
+  tel: {
+    inputExtractor: (htmlStr) => {
+      const $ = cheerio.load(htmlStr);
+      return $('div.item_box div.inp_list_box3 p').map((index, element) => ({
+        index: index + 1,
+        subTitle: $(element).text().trim()
+      })).get();
+    },
+    resultExtractor: (htmlStr) => {
+      const $ = cheerio.load(htmlStr);
+      return $('div.res_bg.clearfix div#komidashi').map((index, element) => ({
+        index: index + 1,
+        subTitle: $(element).text().trim()
+      })).get();
+    },
+    inputPageDataExtractor: (htmlStr) => {
+      const $ = cheerio.load(htmlStr);
+      return {
+        nav_text: $('.contents_headerCopy').text().trim(),
+        breadcrumb: $('#breadname').text().trim(),
+        main_title: $('#menu_title').text().trim(),
+      };
+    },
+    resultPageDataExtractor: (htmlStr) => {
+      const $ = cheerio.load(htmlStr);
+      return {
+        nav_text: $('.contents_headerCopy').text().trim(),
+        breadcrumb: $('a.link_pan').last().text().trim(),
+        main_title: $('h3.menu_title_text').text().trim(),
+      };
+    },
+  },
+  com: {
+    inputExtractor: (htmlStr) => {
+      const $ = cheerio.load(htmlStr);
+      return $('div.menu_sub.menu_02 span').map((index, element) => ({
+        index: index + 1,
+        subTitle: $(element).text().trim()
+      })).get();
+    },
+    resultExtractor: (htmlStr) => {
+      const $ = cheerio.load(htmlStr);
+      return $('div.result_content[class*="frame"] div.result_cont_ttl span').map((index, element) => ({
+        index: index + 1,
+        subTitle: $(element).text().trim()
+      })).get();
+    },
+    inputPageDataExtractor: (htmlStr) => {
+      const $ = cheerio.load(htmlStr);
+      return {
+        nav_text: $('.contents_headerCopy').text().trim(),
+        breadcrumb: $('#pankuzu').contents().filter(function() {
+          return this.nodeType === 3;
+        }).last().text().trim().replace(/^>\s*/, ''),
+        main_title: $('.top_menu_name').text().trim().replace(/^>\s*/, ''),
+      };
+    },
+    resultPageDataExtractor: (htmlStr) => {
+      const $ = cheerio.load(htmlStr);
+      return {
+        nav_text: $('.contents_headerCopy').text().trim(),
+        breadcrumb: $('#pankuzu a').last().text().trim(),
+        main_title: $('.top_menu_name').text().trim(),
+      };
+    },
+  },
+};
 
 function compareInputpage(inputDf: SubTitle[], resultDf: SubTitle[]) {
   const result = inputDf.map((input, index) => {
@@ -68,6 +193,50 @@ function compareInputpage(inputDf: SubTitle[], resultDf: SubTitle[]) {
   return result;
 }
 
+function comparePageData(inputData: PageData, resultData: PageData) {
+  return {
+    input: {
+      main_title: {
+        value: inputData.main_title,
+        matchesNavText: inputData.main_title === inputData.nav_text,
+        matchesBreadcrumb: inputData.main_title === inputData.breadcrumb,
+      },
+      nav_text: {
+        value: inputData.nav_text,
+        matchesMainTitle: inputData.nav_text === inputData.main_title,
+        matchesBreadcrumb: inputData.nav_text === inputData.breadcrumb,
+      },
+      breadcrumb: {
+        value: inputData.breadcrumb,
+        matchesMainTitle: inputData.breadcrumb === inputData.main_title,
+        matchesNavText: inputData.breadcrumb === inputData.nav_text,
+      },
+    },
+    result: {
+      main_title: {
+        value: resultData.main_title,
+        matchesNavText: resultData.main_title === resultData.nav_text,
+        matchesBreadcrumb: resultData.main_title === resultData.breadcrumb,
+      },
+      nav_text: {
+        value: resultData.nav_text,
+        matchesMainTitle: resultData.nav_text === resultData.main_title,
+        matchesBreadcrumb: resultData.nav_text === resultData.breadcrumb,
+      },
+      breadcrumb: {
+        value: resultData.breadcrumb,
+        matchesMainTitle: resultData.breadcrumb === resultData.main_title,
+        matchesNavText: resultData.breadcrumb === resultData.nav_text,
+      },
+    },
+    matches: {
+      main_title: inputData.main_title === resultData.main_title,
+      nav_text: inputData.nav_text === resultData.nav_text,
+      breadcrumb: inputData.breadcrumb === resultData.breadcrumb,
+    },
+  };
+}
+
 export async function POST(request: NextRequest) {
   console.log("Received POST request to /api/compare/inputpage");
   try {
@@ -78,21 +247,23 @@ export async function POST(request: NextRequest) {
 
     console.log(`Received data: company=${company}, input_html=${inputHtml.substring(0, 50)}, result_html=${resultHtml.substring(0, 50)}`);
 
-    let inputDf: SubTitle[];
-    let resultDf: SubTitle[];
-
-    if (company === 'rsa') {
-      inputDf = inputHtmlToDfRsa(inputHtml);
-      resultDf = resultHtmlToDfRsa(resultHtml);
-    } else if (company === 'zap') {
-      // Implement ZAP logic here
-      throw new Error('ZAP company not implemented yet');
-    } else {
+    const config = companyConfigs[company];
+    if (!config) {
       throw new Error(`Unsupported company: ${company}`);
     }
 
-    const comparisonResult = compareInputpage(inputDf, resultDf);
-    return NextResponse.json(comparisonResult);
+    const inputDf = config.inputExtractor(inputHtml);
+    const resultDf = config.resultExtractor(resultHtml);
+    const inputPageData = config.inputPageDataExtractor(inputHtml);
+    const resultPageData = config.resultPageDataExtractor(resultHtml);
+
+    const subTitleComparison = compareInputpage(inputDf, resultDf);
+    const pageDataComparison = comparePageData(inputPageData, resultPageData);
+
+    return NextResponse.json({
+      subTitleComparison,
+      pageDataComparison,
+    });
   } catch (error) {
     console.error('Error in compare_inputpage_endpoint:', error);
     return NextResponse.json({ error: (error as Error).message }, { status: 400 });

@@ -1,49 +1,43 @@
-// app/components/Sidebar.tsx
 'use client'
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+
+interface MenuItem {
+  href: string;
+  label: string;
+}
 
 const Sidebar: React.FC = () => {
     const pathname = usePathname();
 
+    const menuItems: MenuItem[] = useMemo(() => [
+        { href: '/', label: 'Top Page' },
+        { href: '/check-csv', label: 'Check CSV' },
+        { href: '/check-inputpage', label: 'Check Input Page' },
+        { href: '/check-resultpage', label: 'Check Result Page' },
+    ], []);
+
     return (
-        <div className="bg-gray-800 text-white w-64 min-h-screen p-4 flex-shrink-0">
+        <nav className="bg-gray-800 text-white w-64 min-h-screen p-4 flex-shrink-0">
             <h2 className="text-2xl font-bold mb-4">Menu</h2>
             <ul className="space-y-2">
-                <li>
-                    <Link 
-                        href="/" 
-                        className={`block py-2 px-4 rounded ${
-                            pathname === '/' ? 'bg-gray-700' : 'hover:bg-gray-700'
-                        }`}
-                    >
-                        Top Page
-                    </Link>
-                </li>
-                <li>
-                    <Link 
-                        href="/check-toppage" 
-                        className={`block py-2 px-4 rounded ${
-                            pathname === '/check-toppage' ? 'bg-gray-700' : 'hover:bg-gray-700'
-                        }`}
-                    >
-                        Check Top Page
-                    </Link>
-                </li>
-                <li>
-                    <Link 
-                        href="/check-inputpage" 
-                        className={`block py-2 px-4 rounded ${
-                            pathname === '/check-inputpage' ? 'bg-gray-700' : 'hover:bg-gray-700'
-                        }`}
-                    >
-                        Check Input Page
-                    </Link>
-                </li>
+                {menuItems.map((item) => (
+                    <li key={item.href}>
+                        <Link 
+                            href={item.href} 
+                            className={`block py-2 px-4 rounded transition-colors duration-200 ${
+                                pathname === item.href ? 'bg-gray-700' : 'hover:bg-gray-700'
+                            }`}
+                            aria-current={pathname === item.href ? 'page' : undefined}
+                        >
+                            {item.label}
+                        </Link>
+                    </li>
+                ))}
             </ul>
-        </div>
+        </nav>
     );
 };
 
