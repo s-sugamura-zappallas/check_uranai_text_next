@@ -144,8 +144,9 @@ const analyzeRelevance = async (title: string, content: string, clientName: stri
 
   const systemPrompt = `<instruction>
 あなたのタスクはtitleとcontentの関連度が高いか確認することです
-関連度はtitleの内���がcontentにちゃんと記載されていれば高くなります。
+関連度はtitleの内容がcontentにちゃんと記載されていれば高くなります。
 ユーザーに出す本番用の文章なので少しでも違和感を感じたら忌憚なく厳しく判断してください
+Output形式は必ず守ってください
 </instruction>
 
 <attention>
