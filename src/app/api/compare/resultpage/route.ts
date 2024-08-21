@@ -41,15 +41,18 @@ const extractionStrategies: Record<string, ExtractionStrategy> = {
   },
   rsa: {
     sectionSelector: 'section',
-    titleSelector: 'div.result_subheading_background_center p',
-    textSelector: 'div.result_description_background_center',
-    clientSelector: '#profileDisplaySection > div:first-child > p',
-    partnerSelector: '#profileDisplaySection > div:nth-child(2) > p',
+    titleSelector: 'div.result_subheading_background_center p, div.result-subheading-background-center p',
+    textSelector: 'div.result_description_background_center, div.result-description-background-center',
+    clientSelector: '#profileDisplaySection p:first-of-type',
+    partnerSelector: '#profileDisplaySection p:nth-of-type(2)',
     titleProcessor: (element: cheerio.Cheerio<cheerio.Element>) => element.text().trim(),
     contentValidator: (content: string, $element: cheerio.Cheerio<cheerio.Element>) => 
       !content.endsWith('……') && $element.find('style, script').length === 0,
     clientProcessor: (text: string) => text.split('&emsp;')[0].trim(),
-    partnerProcessor: (text: string) => text.split('&emsp;')[0].trim(),
+    partnerProcessor: (text: string) => {
+      const parts = text.split('&emsp;');
+      return parts.filter(part => !part.includes('生年月日') && !part.includes('出生地'))[0]?.trim() || '';
+    },
   },
   tel: {
     sectionSelector: 'div.res_bg.clearfix',
@@ -154,7 +157,7 @@ Output形式は必ず守ってください
 ${clientName ? ` - 相談者は${clientName}` : ''}
 ${partnerName ? ` - 相性を占う相手は${partnerName}` : ''}
 ${clientName ? ` - 文章中に出てくる「あなた」は${clientName}のことを指しています` : ''}
-${partnerName ? ` - 文章中に出てくる「あの人」は${partnerName}のことを指しています` : ''}
+${partnerName ? ` - 文章に出てくる「あの人」は${partnerName}のことを指しています` : ''}
 </attention>
 
 <output>

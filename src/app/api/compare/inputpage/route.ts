@@ -24,14 +24,14 @@ const companyConfigs: Record<string, CompanyConfig> = {
   rsa: {
     inputExtractor: (htmlStr) => {
       const $ = cheerio.load(htmlStr);
-      return $('section#subMenuTitleLists div.submenu_title > p').map((index, element) => ({
+      return $('section#subMenuTitleLists div.submenu_title > p, section#subMenuTitleLists div.submenu_titile > p').map((index, element) => ({
         index: index + 1,
         subTitle: $(element).text().trim()
       })).get();
     },
     resultExtractor: (htmlStr) => {
       const $ = cheerio.load(htmlStr);
-      return $('div[class^="result_subheading"]').map((index, element) => ({
+      return $('div[class^="result_subheading"], div[class^="result-subheading-background-center"]').map((index, element) => ({
         index: index + 1,
         subTitle: $(element).find('p').text().trim()
       })).get();
@@ -49,7 +49,7 @@ const companyConfigs: Record<string, CompanyConfig> = {
           .text()
           .trim()
           .replace(/^>\s*/, ''),
-        main_title: $('div[class*="content-menu-title-background-center"], div[class*="content_menu_title_background_center"]').find('p').text().trim(),
+        main_title: $('div[class*="content-menu-title-background-center"], div[class*="content_menu_title_background_center"], div[class*="content-menu_title-background_center"]').find('p').text().trim(),
       };
     },
     resultPageDataExtractor: (htmlStr) => {
@@ -57,7 +57,7 @@ const companyConfigs: Record<string, CompanyConfig> = {
       return {
         nav_text: $('.contents_headerCopy').text().trim(),
         breadcrumb: $('#topicpath a').last().text().trim(),
-        main_title: $('div[class*="content-menu-title-background-center"], div[class*="content_menu_title_background_center"]').find('p').text().trim(),
+        main_title: $('div[class*="content-menu-title-background-center"], div[class*="content_menu_title_background_center"], div[class*="content-menu_title-background_center"]').first().find('p').text().trim(),
       };
     },
   },
@@ -245,25 +245,41 @@ export async function POST(request: NextRequest) {
     const inputHtml = formData.get('input_html') as string;
     const resultHtml = formData.get('result_html') as string;
 
-    console.log(`Received data: company=${company}, input_html=${inputHtml.substring(0, 50)}, result_html=${resultHtml.substring(0, 50)}`);
+    console.log(`Received data: company=${company}`);
+    console.log(`Input HTML preview: ${inputHtml.substring(0, 100)}...`);
+    console.log(`Result HTML preview: ${resultHtml.substring(0, 100)}...`);
 
     const config = companyConfigs[company];
     if (!config) {
       throw new Error(`Unsupported company: ${company}`);
     }
+    console.log(`Config found for company: ${company}`);
 
     const inputDf = config.inputExtractor(inputHtml);
+    console.log(`Input subtitles extracted:`, inputDf);
+
     const resultDf = config.resultExtractor(resultHtml);
+    console.log(`Result subtitles extracted:`, resultDf);
+
     const inputPageData = config.inputPageDataExtractor(inputHtml);
+    console.log(`Input page data extracted:`, inputPageData);
+
     const resultPageData = config.resultPageDataExtractor(resultHtml);
+    console.log(`Result page data extracted:`, resultPageData);
 
     const subTitleComparison = compareInputpage(inputDf, resultDf);
-    const pageDataComparison = comparePageData(inputPageData, resultPageData);
+    console.log(`Subtitle comparison result:`, subTitleComparison);
 
-    return NextResponse.json({
+    const pageDataComparison = comparePageData(inputPageData, resultPageData);
+    console.log(`Page data comparison result:`, pageDataComparison);
+
+    const response = {
       subTitleComparison,
       pageDataComparison,
-    });
+    };
+    console.log(`Sending response:`, response);
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error in compare_inputpage_endpoint:', error);
     return NextResponse.json({ error: (error as Error).message }, { status: 400 });
